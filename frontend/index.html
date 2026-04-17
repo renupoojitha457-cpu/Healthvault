@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HealthVault+</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+.app {
+  display: flex;
+  height: 100vh;
+}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal:#1D9E75; --teal-mid:#0F6E56; --teal-dark:#085041;
+    --teal-light:#E1F5EE; --teal-pale:#9FE1CB;
+    --navy:#042C53; --navy-mid:#0C447C;
+    --blue-light:#E6F1FB;
+    --amber:#EF9F27; --amber-light:#FAEEDA; --amber-dark:#854F0B;
+    --red:#E24B4A; --red-light:#FCEBEB; --red-dark:#A32D2D;
+    --purple:#7F77DD; --purple-light:#EEEDFE; --purple-dark:#3C3489;
+    --gray-50:#F1EFE8; --gray-100:#D3D1C7; --gray-400:#888780; --gray-600:#5F5E5A;
+    --white:#fff; --bg-page:#F0EEE7; --bg-card:#fff;
+    --text:#1A1917; --muted:#6B6A65; --hint:#9E9D98;
+    --border:rgba(0,0,0,0.09); --border-md:rgba(0,0,0,0.14);
+    --radius-sm:6px; --radius-md:10px; --radius-lg:14px;
+    --sidebar-w:210px;
+    --shadow:0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04);
+  }
+  html,body { height:100%; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg-page); color:var(--text); font-size:14px; display:flex; height:100vh; overflow-y: auto; }
+
+  /* ── AUTH OVERLAY ────────────────────────────────────────── */
+  #auth-overlay {
+    position:fixed; inset:0; background:linear-gradient(135deg,#042C53 0%,#0F6E56 100%);
+    display:flex; align-items:center; justify-content:center; z-index:1000;
+  }
+  .auth-box {
+    background:#fff; border-radius:20px; padding:36px 40px;
+    width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  }
+  .auth-brand { text-align:center; margin-bottom:28px; }
+  .auth-brand-name { font-family:'Instrument Serif',serif; font-size:28px; color:var(--navy); }
+  .auth-brand-name span { color:var(--teal); }
+  .auth-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+  .auth-tabs { display:flex; border:1px solid var(--border-md); border-radius:10px; overflow-y:auto; margin-bottom:24px; }
+  .auth-tab { flex:1; padding:9px; text-align:center; font-size:13px; cursor:pointer; background:#fff; color:var(--muted); transition:all 0.15s; }
+  .auth-tab.active { background:var(--navy); color:#fff; font-weight:500; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .field input, .field select {
+    width:100%; padding:10px 12px; border:1px solid var(--border-md);
+    border-radius:var(--radius-md); font-family:inherit; font-size:13px;
+    outline:none; transition:border 0.15s;
+  }
+  .field input:focus, .field select:focus { border-color:var(--teal); }
+  .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .btn-auth {
+    width:100%; padding:11px; background:var(--teal); color:#fff;
+    border:none; border-radius:var(--radius-md); font-size:14px; font-weight:500;
+    cursor:pointer; font-family:inherit; margin-top:4px; transition:background 0.15s;
+  }
+  .btn-auth:hover { background:var(--teal-mid); }
+  .auth-error { font-size:12px; color:var(--red); text-align:center; margin-top:10px; min-height:18px; }
+  #login-form, #register-form { display:none; }
+  #login-form.active, #register-form.active { display:block; }
+
+  /* ── SIDEBAR ─────────────────────────────────────────────── */
+  .sidebar { width:var(--sidebar-w); background:var(--navy); display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto; padding-bottom:16px; }
+  .brand { padding:22px 18px 18px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .brand-logo { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .brand-icon { width:30px; height:30px; border-radius:8px; background:var(--teal); display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .brand-name { font-family:'Instrument Serif',serif; font-size:19px; color:#fff; }
+  .brand-name span { color:var(--teal-pale); }
+  .brand-tag { font-size:9px; letter-spacing:1.2px; text-transform:uppercase; color:rgba(255,255,255,0.3); padding-left:38px; }
+  .nav-section { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.25); padding:16px 18px 5px; }
+  .nav-item { display:flex; align-items:center; gap:9px; padding:9px 18px; cursor:pointer; font-size:13px; color:rgba(255,255,255,0.5); border-left:2px solid transparent; transition:all 0.15s; user-select:none; }
+  .nav-item:hover { color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.05); }
+  .nav-item.active { color:#fff; border-left-color:var(--teal); background:rgba(29,158,117,0.18); }
+  .nav-icon { font-size:14px; width:16px; text-align:center; flex-shrink:0; }
+  .sidebar-bottom { margin-top:auto; padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08); }
+  .user-row { display:flex; align-items:center; gap:9px; cursor:pointer; padding:6px 8px; border-radius:var(--radius-md); transition:background 0.15s; }
+  .user-row:hover { background:rgba(255,255,255,0.06); }
+  .user-avatar { width:32px; height:32px; border-radius:50%; background:var(--teal); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#fff; flex-shrink:0; }
+  .user-name { font-size:12px; font-weight:500; color:rgba(255,255,255,0.8); }
+  .user-plan { font-size:10px; color:rgba(255,255,255,0.3); }
+  .notif-bubble { width:18px; height:18px; border-radius:50%; background:var(--red); color:#fff; font-size:10px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  /* ── MAIN ────────────────────────────────────────────────── */
+  .main { flex:1; display:flex; flex-direction:column; overflow-y:auto; }
+  .topbar { background:var(--bg-card); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .page-title { font-size:15px; font-weight:500; }
+  .page-sub { font-size:11px; color:var(--muted); margin-top:1px; }
+  .topbar-actions { display:flex; gap:8px; align-items:center; }
+  .btn { padding:7px 14px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--border-md); background:var(--bg-card); color:var(--text); font-family:inherit; transition:all 0.15s; }
+  .btn:hover { background:var(--gray-50); }
+  .btn.primary { background:var(--teal); color:#fff; border-color:var(--teal); }
+  .btn.primary:hover { background:var(--teal-mid); }
+  .btn.danger { background:var(--red); color:#fff; border-color:var(--red); font-size:11px; padding:5px 10px; }
+
+  /* ── CONTENT ─────────────────────────────────────────────── */
+  .content { flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:18px; }
+  .stats-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+  .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:14px 16px; box-shadow:var(--shadow); }
+  .stat-label { font-size:11px; color:var(--muted); margin-bottom:6px; }
+  .stat-value { font-size:28px; font-weight:500; line-height:1; }
+  .stat-delta { font-size:11px; margin-top:5px; }
+  .c-teal{color:var(--teal);} .c-amber{color:var(--amber-dark);} .c-red{color:var(--red);} .c-muted{color:var(--muted);}
+  .grid-3 { display:grid; grid-template-columns:2fr 1fr; gap:16px; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+
+  /* ── CARDS ───────────────────────────────────────────────── */
+  .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow); }
+  .card-head { padding:13px 16px 11px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .card-title { font-size:13px; font-weight:500; }
+  .card-action { font-size:11px; color:var(--teal); cursor:pointer; padding:3px 8px; border-radius:12px; transition:background 0.15s; }
+  .card-action:hover { background:var(--teal-light); }
+  .card-body { padding:12px 16px; }
+
+  /* ── TABS ────────────────────────────────────────────────── */
+  .tab-row { display:flex; gap:2px; padding:0 16px; border-bottom:1px solid var(--border); background:var(--gray-50); }
+  .tab { padding:8px 12px; font-size:12px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; white-space:nowrap; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--teal); border-bottom-color:var(--teal); font-weight:500; }
+
+  /* ── RECORDS ─────────────────────────────────────────────── */
+  .record-list { padding:4px 0; }
+  .record-row { display:flex; align-items:center; gap:11px; padding:9px 16px; border-bottom:1px solid var(--border); transition:background 0.12s; cursor:pointer; }
+  .record-row:last-child { border-bottom:none; }
+  .record-row:hover { background:var(--gray-50); }
+  .rec-icon { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .ri-blue{background:var(--blue-light);} .ri-teal{background:var(--teal-light);} .ri-amber{background:var(--amber-light);} .ri-purple{background:var(--purple-light);} .ri-red{background:var(--red-light);}
+  .rec-info { flex:1; min-width:0; }
+  .rec-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rec-meta { font-size:11px; color:var(--muted); margin-top:1px; }
+  .badge { font-size:10px; padding:3px 9px; border-radius:12px; font-weight:500; flex-shrink:0; white-space:nowrap; }
+  .b-teal{background:var(--teal-light);color:var(--teal-dark);}
+  .b-amber{background:var(--amber-light);color:var(--amber-dark);}
+  .b-red{background:var(--red-light);color:var(--red-dark);}
+  .b-gray{background:var(--gray-50);color:var(--gray-600);}
+  .b-purple{background:var(--purple-light);color:var(--purple-dark);}
+
+  /* ── ALERTS ──────────────────────────────────────────────── */
+  .alert-item { display:flex; gap:10px; padding:10px 12px; border-radius:var(--radius-md); margin-bottom:8px; cursor:pointer; transition:filter 0.15s; }
+  .alert-item:last-child { margin-bottom:0; }
+  .alert-item:hover { filter:brightness(0.97); }
+  .alert-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+  .alert-text { font-size:12px; line-height:1.5; }
+  .alert-time { font-size:10px; color:var(--muted); margin-top:2px; }
+  .alert-red{background:var(--red-light);} .alert-amber{background:var(--amber-light);} .alert-teal{background:var(--teal-light);}
+
+  /* ── METRICS ─────────────────────────────────────────────── */
+  .metric-row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); }
+  .metric-row:last-child { border-bottom:none; }
+  .metric-name { font-size:12px; color:var(--muted); width:90px; flex-shrink:0; }
+  .metric-bar-wrap { flex:1; height:6px; border-radius:3px; background:var(--gray-50); overflow:hidden; }
+  .metric-bar { height:100%; border-radius:3px; }
+  .metric-val { font-size:12px; font-weight:500; width:70px; text-align:right; flex-shrink:0; }
+
+  /* ── OCR ZONE ────────────────────────────────────────────── */
+  .ocr-zone { border:1.5px dashed var(--border-md); border-radius:var(--radius-md); padding:18px 14px; text-align:center; cursor:pointer; background:var(--gray-50); transition:all 0.2s; }
+  .ocr-zone:hover,.ocr-zone.dragover { background:var(--teal-light); border-color:var(--teal); }
+  .ocr-icon { font-size:26px; margin-bottom:6px; }
+  .ocr-text { font-size:12px; color:var(--muted); line-height:1.5; }
+  .ocr-text strong { color:var(--teal); }
+  #file-input { display:none; }
+
+  /* ── TOAST ───────────────────────────────────────────────── */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--navy); color:#fff; padding:12px 18px; border-radius:var(--radius-md); font-size:13px; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.2); transform:translateY(80px); opacity:0; transition:all 0.3s; pointer-events:none; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.success { background:var(--teal); }
+  .toast.error { background:var(--red); }
+
+  /* ── LOADING ─────────────────────────────────────────────── */
+  .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:6px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .skeleton { background:linear-gradient(90deg,var(--gray-50) 25%,var(--gray-100) 50%,var(--gray-50) 75%); background-size:200% 100%; animation:shimmer 1.2s infinite; border-radius:4px; }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* ── UPLOAD MODAL ────────────────────────────────────────── */
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; display:none; align-items:center; justify-content:center; }
+  .modal-bg.open { display:flex; }
+  .modal { background:#fff; border-radius:var(--radius-lg); padding:28px; width:100%; max-width:460px; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+  .modal-title { font-size:15px; font-weight:500; margin-bottom:18px; }
+  .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+
+  ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:var(--gray-100); border-radius:4px; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .stat-card { animation:fadeUp 0.4s ease both; }
+  .stat-card:nth-child(1){animation-delay:0.05s} .stat-card:nth-child(2){animation-delay:0.10s}
+  .stat-card:nth-child(3){animation-delay:0.15s} .stat-card:nth-child(4){animation-delay:0.20s}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- ═══════════ AUTH OVERLAY ═════════════════════════════════ -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-brand">
+      <div class="auth-brand-name">Health<span>Vault</span>+</div>
+      <div class="auth-sub">AI-Powered Healthcare Management</div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="showAuthTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="showAuthTab('register')">Register</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login-form" class="active">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <button class="btn-auth" onclick="doLogin()">Sign In</button>
+      <div class="auth-error" id="login-error"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="register-form">
+      <div class="field-row">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="Arjun Reddy" />
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input type="tel" id="reg-phone" placeholder="+91 9999999999" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min 8 characters" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="reg-dob" />
+        </div>
+        <div class="field">
+          <label>Blood Group</label>
+          <select id="reg-blood">
+            <option value="">Select</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>O+</option><option>O-</option>
+            <option>AB+</option><option>AB-</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <select id="reg-gender">
+          <option value="">Select</option>
+          <option>Male</option><option>Female</option><option>Other</option>
+        </select>
+      </div>
+      <button class="btn-auth" onclick="doRegister()">Create Account</button>
+      <div class="auth-error" id="reg-error"></div>
+    </div>
+    <div id="summaryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999;">
+      <div style="background:white; width:90%; max-width:700px; margin:60px auto; padding:20px; border-radius:12px; position:relative;">
+        <button onclick="closeSummaryModal()" style="position:absolute; right:12px; top:12px; border:none; background:none; font-size:20px; cursor:pointer;">×</button>
+        <h2 style="margin-bottom:12px;">Record Summary</h2>
+        <div id="summaryContent" style="line-height:1.6; white-space:pre-wrap;"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══════════ UPLOAD MODAL ══════════════════════════════════ -->
+<div class="modal-bg" id="upload-modal">
+  <div class="modal">
+    <div class="modal-title">Upload Medical Record</div>
+    <div class="field">
+      <label>Record Type</label>
+      <select id="upload-type">
+        <option value="lab">Lab Report</option>
+        <option value="prescription">Prescription</option>
+        <option value="imaging">Imaging / X-Ray</option>
+        <option value="consultation">Consultation Note</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="upload-title" placeholder="e.g. CBC + Lipid Panel — Thyrocare" />
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Doctor Name</label>
+        <input type="text" id="upload-doctor" placeholder="Dr. Suresh Rao" />
+      </div>
+      <div class="field">
+        <label>Hospital / Lab</label>
+        <input type="text" id="upload-hospital" placeholder="Apollo Hospital" />
+      </div>
+    </div>
+    <div class="field">
+      <label>File (Image / PDF)</label>
+      <div class="ocr-zone" onclick="document.getElementById('modal-file').click()">
+        <div class="ocr-icon">📄</div>
+        <div class="ocr-text" id="modal-file-label"><strong>Click to select</strong> a prescription or lab report</div>
+      </div>
+      <input type="file" id="modal-file" accept="image/*,.pdf" style="display:none" onchange="onModalFileChange(this)" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeUploadModal()">Cancel</button>
+      <button class="btn primary" onclick="submitUpload()">Upload & Process</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ APP ════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">
+      <div class="brand-icon">🏥</div>
+      <div class="brand-name">Health<span>Vault</span>+</div>
+    </div>
+    <div class="brand-tag">AI Health Management</div>
+  </div>
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="setView('dashboard',this)"><span class="nav-icon">⬡</span><span>Dashboard</span></div>
+  <div class="nav-item" onclick="setView('records',this)"><span class="nav-icon">📋</span><span>Records</span></div>
+  <div class="nav-item" onclick="setView('analysis',this)">
+  <span class="nav-icon">🧠</span><span>Health Analysis</span>
+</div>
+<div class="nav-item" onclick="setView('ai_analysis',this)">
+  <span class="nav-icon">🤖</span><span>AI Analysis</span>
+</div>
+  <div class="nav-item" onclick="setView('metrics',this)"><span class="nav-icon">📊</span><span>Health Metrics</span></div>
+  <div class="nav-section">Tools</div>
+  <div class="nav-item" onclick="openUploadModal()"><span class="nav-icon">🔍</span><span>OCR Import</span></div>
+  <div class="nav-item" onclick="setView('alerts',this)">
+    <span class="nav-icon">🔔</span><span>Alerts</span>
+    <div class="notif-bubble" id="alert-badge" style="display:none;margin-left:auto;">0</div>
+  </div>
+  <div class="nav-item" onclick="setView('nearby',this)">
+  <span class="nav-icon">📍</span><span>Nearby Care</span>
+</div>
+  <div class="nav-section">Account</div>
+  <div class="nav-item" onclick="doLogout()"><span class="nav-icon">🚪</span><span>Logout</span></div>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar" id="sidebar-avatar">?</div>
+      <div>
+        <div class="user-name" id="sidebar-name">Loading…</div>
+        <div class="user-plan">Free Plan</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="page-sub" id="page-sub">Loading…</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn" onclick="refreshCurrentView()">↻ Refresh</button>
+      <button class="btn primary" onclick="openUploadModal()">+ Add Record</button>
+    </div>
+  </div>
+
+  <div class="content" id="app-content">
+    <!-- Dynamic content rendered here -->
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════════
+let allRecords = [];
+function showSummaryById(recordId) {
+  const record = allRecords.find(r => r.id === recordId);
+  const summary = record?.extracted_data?.summary || "No summary available";
+
+  document.getElementById("summaryContent").innerText = summary;
+  document.getElementById("summaryModal").style.display = "block";
+}
+
+function closeSummaryModal() {
+  document.getElementById("summaryModal").style.display = "none";
+}
+const API = "http://127.0.0.1:8000/api";
+let TOKEN    = localStorage.getItem("hv_token");
+let CURRENT_USER = JSON.parse(localStorage.getItem("hv_user") || "null");
+let CURRENT_VIEW = "dashboard";
+
+// ═══════════════════════════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════════════════════════
+async function api(method, path, body = null, isForm = false) {
+  const headers = { Authorization: `Bearer ${TOKEN}` };
+  if (!isForm && body) headers["Content-Type"] = "application/json";
+
+  const res = await fetch(API + path, {
+    method,
+    headers,
+    body: isForm ? body : (body ? JSON.stringify(body) : null)
+  }); 
+
+  if (res.status === 401) { doLogout(); return null; }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Error ${res.status}`);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+const GET    = (path)       => api("GET",    path);
+const POST   = (path, body) => api("POST",   path, body);
+const PUT    = (path, body) => api("PUT",    path, body);
+const DELETE = (path)       => api("DELETE", path);
+
+// ═══════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════
+function toast(msg, type = "") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className   = `toast ${type} show`;
+  setTimeout(() => el.classList.remove("show"), 3500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════════
+function showAuthTab(tab) {
+  document.querySelectorAll(".auth-tab").forEach((t,i) => t.classList.toggle("active", (tab==="login"?i===0:i===1)));
+  document.getElementById("login-form").classList.toggle("active",    tab==="login");
+  document.getElementById("register-form").classList.toggle("active", tab==="register");
+}
+
+async function doLogin() {
+  const email    = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+  const errEl    = document.getElementById("login-error");
+  errEl.textContent = "";
+  try {
+    const data = await POST("/auth/login", { email, password });
+    if (!data) return;
+    saveSession(data);
+  } catch(e) {
+    errEl.textContent = e.message;
+  }
+}
+
+async function doRegister() {
+  const errEl = document.getElementById("reg-error");
+  errEl.textContent = "";
+  const payload = {
+    name:        document.getElementById("reg-name").value.trim(),
+    email:       document.getElementById("reg-email").value.trim(),
+    password:    document.getElementById("reg-password").value,
+    phone:       document.getElementById("reg-phone").value.trim() || null,
+    dob:         document.getElementById("reg-dob").value || null,
+    blood_group: document.getElementById("reg-blood").value || null,
+    gender:      document.getElementById("reg-gender").value || null,
+  };
+  if (!payload.name || !payload.email || !payload.password) {
+    errEl.textContent = "Name, email and password are required."; return;
+  }
+  try {
+    const data = await POST("/auth/register", payload);
+    if (!data) return;
+    saveSession(data);
+  } catch(e) {
+    errEl.textContent = e.message;
+  }
+}
+
+function openSummaryModal(summaryText) {
+  document.getElementById("summaryContent").innerText =
+    summaryText || "No summary available for this record.";
+  document.getElementById("summaryModal").style.display = "block";
+}
+
+function closeSummaryModal() {
+  document.getElementById("summaryModal").style.display = "none";
+}
+
+function saveSession(data) {
+  TOKEN        = data.access_token;
+  CURRENT_USER = { id: data.user_id, name: data.name, email: data.email };
+  localStorage.setItem("hv_token", TOKEN);
+  localStorage.setItem("hv_user", JSON.stringify(CURRENT_USER));
+  document.getElementById("auth-overlay").style.display = "none";
+  initApp();
+}
+
+function doLogout() {
+  localStorage.removeItem("hv_token");
+  localStorage.removeItem("hv_user");
+  TOKEN = null; CURRENT_USER = null;
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  APP INIT
+// ═══════════════════════════════════════════════════════════════
+function initApp() {
+  if (!TOKEN) { document.getElementById("auth-overlay").style.display = "flex"; return; }
+  document.getElementById("auth-overlay").style.display = "none";
+
+  // Set sidebar user info
+  if (CURRENT_USER) {
+    document.getElementById("sidebar-name").textContent  = CURRENT_USER.name;
+    document.getElementById("sidebar-avatar").textContent = CURRENT_USER.name.charAt(0).toUpperCase();
+  }
+
+  // Update date in topbar
+  document.getElementById("page-sub").textContent =
+    new Date().toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+
+  loadAlertBadge();
+  setView("dashboard", document.querySelector(".nav-item.active"));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function setView(view, navEl) {
+  CURRENT_VIEW = view;
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  if (navEl) navEl.classList.add("active");
+  const titles = {
+  dashboard: "Dashboard",
+  analysis: "Health Analysis",
+  ai_analysis: "AI Analysis",
+  records: "Medical Records",
+  metrics: "Health Metrics",
+  alerts: "AI Alerts",
+  nearby: "Nearby Care"
+};
+  document.getElementById("page-title").textContent = titles[view] || view;
+  renderView(view);
+}
+
+function refreshCurrentView() { renderView(CURRENT_VIEW); }
+
+function renderView(view) {
+  const el = document.getElementById("app-content");
+  el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted)"><div class="spinner" style="border-top-color:var(--teal);border-color:var(--teal-light);width:28px;height:28px;border-width:3px;"></div></div>`;
+
+  if      (view === "dashboard")   renderDashboard();
+  else if (view === "analysis")    renderAnalysis();
+  else if (view === "ai_analysis") renderAIAnalysis();
+  else if (view === "records")     renderRecords();
+  else if (view === "metrics")     renderMetrics();
+  else if (view === "alerts")      renderAlerts();
+  else if (view === "nearby")      renderNearby();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+async function renderDashboard() {
+  try {
+    const stats = await GET("/records/dashboard/stats");
+    if (!stats) return;
+
+    const typeIcon  = { prescription:"💊", lab:"🧪", imaging:"🩻", consultation:"🩺" };
+    const typeClass = { prescription:"ri-blue", lab:"ri-teal", imaging:"ri-purple", consultation:"ri-amber" };
+    const statusBadge = { processed:"<span class='badge b-teal'>Processed</span>", pending:"<span class='badge b-amber'>Pending</span>", review:"<span class='badge b-red'>Review</span>" };
+    const alertClass  = { critical:"alert-red", warning:"alert-amber", info:"alert-teal" };
+    const alertDotColor = { critical:"#E24B4A", warning:"#EF9F27", info:"#1D9E75" };
+    const metricColor = { normal:"var(--teal)", high:"var(--red)", low:"var(--amber)", unknown:"var(--gray-400)" };
+
+    const recordsHTML = stats.recent_records.length
+      ? stats.recent_records.map(r => `
+        <div class="record-row">
+          <div class="rec-icon ${typeClass[r.record_type]||'ri-blue'}">${typeIcon[r.record_type]||'📄'}</div>
+          <div class="rec-info">
+            <div class="rec-name">${r.title}</div>
+            <div class="rec-meta">${r.doctor_name||''} ${r.doctor_name?'·':''} ${fmtDate(r.created_at)} · ${r.source}</div>
+          </div>
+          ${statusBadge[r.status]||''}
+        </div>`).join("")
+      : `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">No records yet. Upload your first record!</div>`;
+
+    const alertsHTML = stats.recent_alerts.length
+      ? stats.recent_alerts.map(a => `
+        <div class="alert-item ${alertClass[a.alert_type]||'alert-teal'}" onclick="markAlertRead(${a.id},this)">
+          <div class="alert-dot" style="background:${a.alert_type==='critical'?'var(--red)':a.alert_type==='warning'?'var(--amber)':'var(--teal)'};"></div>
+          <div>
+            <div class="alert-text">${a.message}</div>
+            <div class="alert-time">${fmtDate(a.created_at)}</div>
+          </div>
+        </div>`).join("")
+      : `<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">No active alerts 🎉</div>`;
+
+    const metricsHTML = stats.latest_metrics.length
+      ? stats.latest_metrics.map(m => {
+          const pct = Math.min(100, Math.max(10, (m.value/200)*100));
+          return `
+          <div class="metric-row">
+            <div class="metric-name">${m.metric_name}</div>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:${pct}%;background:${metricColor[m.status]||'var(--gray-400)'};"></div></div>
+            <div class="metric-val" style="color:${metricColor[m.status]||'var(--text)'}">${m.value} ${m.unit||''}</div>
+          </div>`;}).join("")
+      : `<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">No metrics extracted yet.</div>`;
+
+    document.getElementById("app-content").innerHTML = `
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Records</div><div class="stat-value">${stats.total_records}</div><div class="stat-delta c-teal">All time</div></div>
+        <div class="stat-card"><div class="stat-label">Pending Follow-ups</div><div class="stat-value c-amber">${stats.pending_followups}</div><div class="stat-delta c-amber">Need attention</div></div>
+        <div class="stat-card"><div class="stat-label">Health Score</div><div class="stat-value c-teal">${stats.health_score}</div><div class="stat-delta c-teal">Based on metrics</div></div>
+        <div class="stat-card"><div class="stat-label">Active Alerts</div><div class="stat-value c-red">${stats.active_alerts}</div><div class="stat-delta c-red">${stats.active_alerts>0?'Needs attention':'All clear'}</div></div>
+      </div>
+
+      <div class="grid-3">
+        <div class="col">
+          <div class="card">
+            <div class="card-head"><div class="card-title">Recent Records</div><div class="card-action" onclick="setView('records',null)">View all →</div></div>
+            <div class="record-list">${recordsHTML}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <div class="card-head"><div class="card-title">AI Health Alerts</div></div>
+            <div class="card-body">${alertsHTML}</div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Key Metrics</div><div class="card-action" onclick="setView('metrics',null)">All →</div></div>
+            <div class="card-body">${metricsHTML}</div>
+          </div>
+        </div>
+      </div>`;
+  } catch(e) {
+    showError(e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RECORDS
+// ═══════════════════════════════════════════════════════════════
+async function renderRecords(filter = null) {
+  try {
+    const path    = filter ? `/records/?record_type=${filter}` : "/records/";
+    const records = await GET(path);
+    allRecords = records;
+    if (!records) return;
+
+    const typeIcon  = { prescription:"💊", lab:"🧪", imaging:"🩻", consultation:"🩺" };
+    const typeClass = { prescription:"ri-blue", lab:"ri-teal", imaging:"ri-purple", consultation:"ri-amber" };
+    const statusBadge = { processed:"<span class='badge b-teal'>Processed</span>", pending:"<span class='badge b-amber'>Pending</span>", review:"<span class='badge b-red'>Review</span>" };
+
+    const rows = records.length
+      ? records.map(r => `
+        <div class="record-row">
+          <div class="rec-icon ${typeClass[r.record_type]||'ri-blue'}">${typeIcon[r.record_type]||'📄'}</div>
+          <div class="rec-info">
+            <div class="rec-name">${r.title}</div>
+            <div class="rec-meta">${[r.doctor_name,r.hospital_name,fmtDate(r.created_at),r.source].filter(Boolean).join(' · ')}</div>
+          </div>
+          ${statusBadge[r.status]||''}
+          <button class="btn" onclick="showSummaryById(${r.id})" style="margin-left:8px;">Summary</button>
+          <button class="btn danger" onclick="deleteRecord(${r.id},this)" style="margin-left:8px;">Delete</button>
+        </div>`).join("")
+      : `<div style="padding:30px;text-align:center;color:var(--muted);">No records found. Click <strong>+ Add Record</strong> to upload.</div>`;
+
+    document.getElementById("app-content").innerHTML = `
+      <div class="card">
+        <div class="card-head"><div class="card-title">All Records (${records.length})</div><div class="card-action" onclick="openUploadModal()">+ Upload</div></div>
+        <div class="tab-row">
+          <div class="tab ${!filter?'active':''}" onclick="renderRecords(null)">All</div>
+          <div class="tab ${filter==='prescription'?'active':''}" onclick="renderRecords('prescription')">Prescriptions</div>
+          <div class="tab ${filter==='lab'?'active':''}" onclick="renderRecords('lab')">Lab Reports</div>
+          <div class="tab ${filter==='imaging'?'active':''}" onclick="renderRecords('imaging')">Imaging</div>
+          <div class="tab ${filter==='consultation'?'active':''}" onclick="renderRecords('consultation')">Consultations</div>
+        </div>
+        <div class="record-list">${rows}</div>
+      </div>`;
+  } catch(e) {
+    showError(e.message);
+  }
+}
+
+async function deleteRecord(id, btn) {
+  if (!confirm("Delete this record?")) return;
+  try {
+    await DELETE(`/records/${id}`);
+    btn.closest(".record-row").remove();
+    toast("Record deleted", "success");
+    loadAlertBadge();
+  } catch(e) { toast(e.message, "error"); }
+}
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════════
+//  METRICS
+// ═══════════════════════════════════════════════════════════════
+async function renderMetrics() {
+  try {
+    const metrics = await GET("/metrics/");
+    if (!metrics) return;
+
+    const statusColor = { normal:"var(--teal)", high:"var(--red)", low:"var(--amber)", unknown:"var(--gray-400)" };
+    const statusBadge = {
+      normal:`<span class='badge b-teal'>Normal</span>`,
+      high:`<span class='badge b-red'>High</span>`,
+      low:`<span class='badge b-amber'>Low</span>`,
+      unknown:`<span class='badge b-gray'>Unknown</span>`
+    };
+
+    const rows = metrics.length
+      ? metrics.map(m => {
+          const pct = Math.min(100, Math.max(5, (m.value/200)*100));
+          return `<div class="metric-row">
+            <div class="metric-name" style="width:130px">${m.metric_name}</div>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:${pct}%;background:${statusColor[m.status]||'var(--gray-400)'};"></div></div>
+            <div class="metric-val" style="color:${statusColor[m.status]||'var(--text)'};width:80px">${m.value} ${m.unit||''}</div>
+            ${statusBadge[m.status]||''}
+            <div style="font-size:10px;color:var(--hint);margin-left:8px;flex-shrink:0;">${fmtDate(m.recorded_at)}</div>
+          </div>`;}).join("")
+      : `<div style="padding:30px;text-align:center;color:var(--muted);">No metrics yet. Upload a lab report to extract metrics automatically.</div>`;
+
+    document.getElementById("app-content").innerHTML = `
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Health Metrics (${metrics.length})</div>
+          <div class="card-action" onclick="showAddMetricForm()">+ Add manual</div>
+        </div>
+        <div class="card-body" id="add-metric-area"></div>
+        <div class="card-body" style="padding-top:0">${rows}</div>
+      </div>`;
+  } catch(e) { showError(e.message); }
+}
+
+async function renderAnalysis() {
+  try {
+    await POST("/analysis/generate", {});
+    const analysis = await GET("/analysis/");
+
+    if (!analysis) {
+      document.getElementById("app-content").innerHTML =
+        `<div class="card"><div class="card-body">No analysis available.</div></div>`;
+      return;
+    }
+
+    const risks = (analysis.current_risks || []).length
+      ? analysis.current_risks.map(r => `<span class="badge b-red">${r}</span>`).join(" ")
+      : `<span class="badge b-teal">No major risk</span>`;
+
+    const findings = (analysis.repeated_findings || []).length
+      ? analysis.repeated_findings.map(f => `<li>${f}</li>`).join("")
+      : `<li>No repeated abnormal findings detected yet.</li>`;
+
+    const missing = (analysis.missing_data || []).length
+      ? analysis.missing_data.map(m => `<li>${m}</li>`).join("")
+      : `<li>No major missing data.</li>`;
+
+    document.getElementById("app-content").innerHTML = `
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Health Analysis</div>
+          <div class="card-action" onclick="refreshAnalysis()">Refresh →</div>
+        </div>
+        <div class="card-body">
+          <p>${analysis.overall_summary}</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Active Risks</div>
+        </div>
+        <div class="card-body">${risks}</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Repeated Findings</div>
+        </div>
+        <div class="card-body">
+          <ul>${findings}</ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Missing Data</div>
+        </div>
+        <div class="card-body">
+          <ul>${missing}</ul>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    document.getElementById("app-content").innerHTML =
+      `<div class="card"><div class="card-body">Error loading analysis</div></div>`;
+  }
+}
+
+async function refreshAnalysis() {
+  try {
+    await POST("/analysis/generate", {});
+    toast("Analysis refreshed", "success");
+    renderAnalysis();
+  } catch (e) {
+    toast(e.message, "error");
+  }
+}
+
+async function renderAIAnalysis() {
+  try {
+    document.getElementById("app-content").innerHTML = `
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">AI Health Analysis</div>
+        </div>
+        <div class="card-body">
+          <div style="color:var(--muted)">Generating AI analysis...</div>
+        </div>
+      </div>
+    `;
+
+    const res = await POST("/ai-analysis/generate", {});
+    const analysis = res.analysis || "No AI analysis available.";
+
+    const sections = parseAISections(analysis);
+
+    document.getElementById("app-content").innerHTML = `
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">AI Summary</div>
+            <div class="card-action" onclick="renderAIAnalysis()">Refresh →</div>
+          </div>
+          <div class="card-body">
+            ${renderAISectionList(sections.summary, "No summary available.")}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Current Risks</div>
+          </div>
+          <div class="card-body">
+            ${renderRiskBadges(sections.current_risks)}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Repeated Patterns</div>
+          </div>
+          <div class="card-body">
+            ${renderAISectionList(sections.repeated_patterns, "No repeated patterns found.")}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Missing Data</div>
+          </div>
+          <div class="card-body">
+            ${renderAISectionList(sections.missing_data, "No major missing data.")}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Recommendations</div>
+        </div>
+        <div class="card-body">
+          ${renderAISectionList(sections.recommendations, "No recommendations available.")}
+          <div style="margin-top:16px;font-size:12px;color:var(--muted);">
+            This is AI-assisted guidance and not a medical diagnosis.
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function parseAISections(text) {
+  const result = {
+    summary: [],
+    current_risks: [],
+    repeated_patterns: [],
+    missing_data: [],
+    recommendations: []
+  };
+
+  if (!text) return result;
+
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  let current = null;
+
+  for (const line of lines) {
+    const upper = line.toUpperCase();
+
+    if (upper.startsWith("SUMMARY:")) {
+      current = "summary";
+      continue;
+    }
+    if (upper.startsWith("CURRENT RISKS:")) {
+      current = "current_risks";
+      continue;
+    }
+    if (upper.startsWith("REPEATED PATTERNS:")) {
+      current = "repeated_patterns";
+      continue;
+    }
+    if (upper.startsWith("MISSING DATA:")) {
+      current = "missing_data";
+      continue;
+    }
+    if (upper.startsWith("RECOMMENDATIONS:")) {
+      current = "recommendations";
+      continue;
+    }
+
+    if (!current) continue;
+
+    const cleaned = line.replace(/^-\s*/, "").trim();
+    if (cleaned) result[current].push(cleaned);
+  }
+
+  return result;
+}
+
+function renderAISectionList(items, fallback) {
+  if (!items || !items.length) {
+    return `<div style="color:var(--muted)">${fallback}</div>`;
+  }
+
+  return `
+    <ul style="padding-left:18px;line-height:1.9;color:var(--text)">
+      ${items.map(item => `<li>${escapeHTML(item)}</li>`).join("")}
+    </ul>
+  `;
+}
+
+function renderRiskBadges(items) {
+  if (!items || !items.length) {
+    return `<span class="badge b-teal">No major risk</span>`;
+  }
+
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;">
+    ${items.map(item => `<span class="badge b-red">${escapeHTML(item)}</span>`).join("")}
+  </div>`;
+}
+
+function escapeHTML(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function showAddMetricForm() {
+  document.getElementById("add-metric-area").innerHTML = `
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+      <div class="field" style="margin:0"><label>Metric Name</label><input type="text" id="m-name" placeholder="e.g. LDL Cholesterol"/></div>
+      <div class="field" style="margin:0"><label>Value</label><input type="number" id="m-val" placeholder="148"/></div>
+      <div class="field" style="margin:0"><label>Unit</label><input type="text" id="m-unit" placeholder="mg/dL"/></div>
+      <button class="btn primary" onclick="addMetric()" style="height:38px;margin-top:auto;">Add</button>
+    </div>`;
+}
+
+async function addMetric() {
+  const name  = document.getElementById("m-name").value.trim();
+  const value = parseFloat(document.getElementById("m-val").value);
+  const unit  = document.getElementById("m-unit").value.trim();
+  if (!name || isNaN(value)) { toast("Please enter name and value","error"); return; }
+  try {
+    await POST("/metrics/", { metric_name:name, value, unit });
+    toast("Metric added", "success");
+    renderMetrics();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ALERTS
+// ═══════════════════════════════════════════════════════════════
+async function renderAlerts() {
+  try {
+    const alerts = await GET("/alerts/");
+    if (!alerts) return;
+
+    const alertClass = { critical:"alert-red", warning:"alert-amber", info:"alert-teal" };
+    const rows = alerts.length
+      ? alerts.map(a => `
+        <div class="alert-item ${alertClass[a.alert_type]||'alert-teal'}" id="alert-${a.id}" style="${a.is_read?'opacity:0.6':''}">
+          <div class="alert-dot" style="background:${a.alert_type==='critical'?'var(--red)':a.alert_type==='warning'?'var(--amber)':'var(--teal)'};"></div>
+          <div style="flex:1">
+            <div class="alert-text">${a.message}</div>
+            <div class="alert-time">${fmtDate(a.created_at)} ${a.source_metric?'· '+a.source_metric:''}</div>
+          </div>
+          ${!a.is_read?`<button class="btn" style="font-size:10px;padding:4px 8px;flex-shrink:0;" onclick="markAlertRead(${a.id},this)">Mark read</button>`:'<span style="font-size:10px;color:var(--muted);flex-shrink:0;">Read</span>'}
+          <button class="btn danger" onclick="deleteAlertRow(${a.id},this)" style="flex-shrink:0;">✕</button>
+        </div>`).join("")
+      : `<div style="padding:30px;text-align:center;color:var(--muted);">No alerts. Great health! 🎉</div>`;
+
+    document.getElementById("app-content").innerHTML = `
+      <div class="card">
+        <div class="card-head"><div class="card-title">All Alerts (${alerts.length})</div></div>
+        <div class="card-body">${rows}</div>
+      </div>`;
+  } catch(e) { showError(e.message); }
+}
+
+async function markAlertRead(id, el) {
+  try {
+    await PUT(`/alerts/${id}/read`);
+    const row = document.getElementById(`alert-${id}`);
+    if (row) row.style.opacity = "0.6";
+    loadAlertBadge();
+    toast("Marked as read","success");
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function deleteAlertRow(id, btn) {
+  try {
+    await DELETE(`/alerts/${id}`);
+    btn.closest(".alert-item").remove();
+    loadAlertBadge();
+    toast("Alert dismissed","success");
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function loadAlertBadge() {
+  try {
+    const alerts = await GET("/alerts/");
+    if (!alerts) return;
+    const unread = alerts.filter(a => !a.is_read).length;
+    const badge  = document.getElementById("alert-badge");
+    badge.style.display = unread > 0 ? "flex" : "none";
+    badge.textContent   = unread;
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UPLOAD MODAL
+// ═══════════════════════════════════════════════════════════════
+function openUploadModal()  { document.getElementById("upload-modal").classList.add("open"); }
+function closeUploadModal() { document.getElementById("upload-modal").classList.remove("open"); }
+
+function onModalFileChange(input) {
+  const file = input.files[0];
+  if (file) document.getElementById("modal-file-label").innerHTML = `<strong>${file.name}</strong> selected`;
+}
+
+async function submitUpload() {
+  const file     = document.getElementById("modal-file").files[0];
+  const type     = document.getElementById("upload-type").value;
+  const title    = document.getElementById("upload-title").value.trim() || "Uploaded Record";
+  const doctor   = document.getElementById("upload-doctor").value.trim();
+  const hospital = document.getElementById("upload-hospital").value.trim();
+
+  if (!file) { toast("Please select a file","error"); return; }
+
+  const form = new FormData();
+  form.append("file",         file);
+  form.append("record_type",  type);
+  form.append("title",        title);
+  if (doctor)   form.append("doctor_name",   doctor);
+  if (hospital) form.append("hospital_name", hospital);
+
+  try {
+    toast("Uploading & running OCR…");
+    const record = await api("POST", "/records/upload", form, true);
+    if (!record) return;
+    closeUploadModal();
+    toast(`Record uploaded! Extracted ${record.extracted_data?.metrics?.length||0} metrics.`, "success");
+    loadAlertBadge();
+    if (CURRENT_VIEW === "dashboard") renderDashboard();
+    else if (CURRENT_VIEW === "records") renderRecords();
+  } catch(e) {
+    toast(e.message, "error");
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function fmtDate(str) {
+  if (!str) return "";
+  return new Date(str).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" });
+}
+
+function showError(msg) {
+  document.getElementById("app-content").innerHTML =
+    `<div style="padding:40px;text-align:center;color:var(--red);">⚠️ ${msg}<br><br><button class="btn" onclick="refreshCurrentView()">Retry</button></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════════
+initApp();
+
+
+</script>
+<div id="summaryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999;">
+  <div style="background:#fff; width:90%; max-width:700px; margin:60px auto; padding:20px; border-radius:12px; position:relative;">
+    <button onclick="closeSummaryModal()" style="position:absolute; right:12px; top:12px; border:none; background:none; font-size:22px; cursor:pointer;">×</button>
+    <h2 style="margin-bottom:12px;">Record Summary</h2>
+    <div id="summaryContent" style="line-height:1.6; white-space:pre-wrap;"></div>
+  </div>
+</div>
+</body>
+</html>

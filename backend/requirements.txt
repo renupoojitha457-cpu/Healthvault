@@ -1,0 +1,16 @@
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+sqlalchemy==2.0.30
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+python-dotenv==1.0.1
+pydantic[email]==2.7.1
+
+# OCR (install separately if needed)
+# pytesseract==0.3.10
+# Pillow==10.3.0
+# PyMuPDF==1.24.2
+
+# PostgreSQL (Phase 2+)
+# psycopg2-binary==2.9.9
